@@ -4,6 +4,7 @@ import com.ccc.domain.ResponseResult;
 import com.ccc.domain.User;
 import com.ccc.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +21,12 @@ public class LoginController {
     public ResponseResult login(@RequestBody User user){
         //登录
         return loginService.login(user);
+    }
+
+    @GetMapping("/user/logout")
+    // 退出登录
+    public ResponseResult logout(){
+        return loginService.logout();
     }
 
 }

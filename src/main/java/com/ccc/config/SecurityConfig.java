@@ -1,5 +1,7 @@
 package com.ccc.config;
 
+import com.ccc.filter.JwtAuthenticationTokenFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,6 +11,7 @@ import org.springframework.security.config.authentication.PasswordEncoderParser;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 // 实现Security提供的WebSecurityConfigurerAdapter,对密码校验规则进行修改
@@ -20,6 +23,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
+
+
+    //---------------------------认证过滤器的实现----------------------------------
+
+    @Autowired
+    //注入我们在filter目录写好的类
+    private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
 
     @Bean
     @Override
@@ -41,5 +51,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/login").anonymous()  // 这里是重点，放行端口
                 // 除上面外的所有请求全部需要鉴权认证
                 .anyRequest().authenticated();
+
+        //---------------------------认证过滤器的实现----------------------------------
+
+        //把token校验过滤器添加到过滤器链中
+        //第一个参数是上面注入的我们在filter目录写好的类，第二个参数表示你想添加到哪个过滤器之前
+        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
     }
 }

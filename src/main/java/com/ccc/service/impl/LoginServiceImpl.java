@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -47,5 +48,22 @@ public class LoginServiceImpl implements LoginService {
         map.put("token",jwt);
         redisCache.setCacheObject("login:"+userid,loginUser);
         return new ResponseResult(200,"登录成功",map);
+    }
+
+    @Override
+    // 主要的业务逻辑就是删除redis存储的用户信息，当下次再来访问的时候
+    public ResponseResult logout() {
+        //获取我们在JwtAuthenticationTokenFilter类写的SecurityContextHolder对象中的用户id
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+        //获取用户id
+        Long userid = loginUser.getUser().getId();
+
+        //根据用户id，删除redis中的token值，注意我们的key是被 login: 拼接过的，所以下面写完整key的时候要带上 longin:
+        redisCache.deleteObject("login:"+userid);
+
+        return new ResponseResult(200,"注销成功");
+
+
     }
 }
