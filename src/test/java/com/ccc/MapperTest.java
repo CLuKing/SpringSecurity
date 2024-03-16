@@ -1,6 +1,7 @@
 package com.ccc;
 
 import com.ccc.domain.User;
+import com.ccc.mapper.MenuMapper;
 import com.ccc.mapper.UserMapper;
 import com.sun.org.apache.bcel.internal.generic.PUSH;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,14 @@ public class MapperTest {
 
         // 看结果
         System.out.println(result);
+    }
+
+    @Autowired
+    private MenuMapper menuMapper;
+    @Test
+    public void testSelectPermsByUserId(){
+        List<String> list = menuMapper.selectPermsByUserId(2L);
+        System.out.println(list);
     }
 
 }

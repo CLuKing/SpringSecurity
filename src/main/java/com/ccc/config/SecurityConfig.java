@@ -5,15 +5,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.authentication.PasswordEncoderParser;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+//@EnableGlobalMethodSecurity(proxyTargetClass = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 // 实现Security提供的WebSecurityConfigurerAdapter,对密码校验规则进行修改
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -37,6 +42,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 
+    @Autowired
+    //注入Security提供的认证失败的处理器，这个处理器里面的AuthenticationEntryPointImpl实现类，用的不是官方的了，
+    //而是用的是我们在handler目录写好的AuthenticationEntryPointImpl实现类，因为我们也是添加到容器把官方的这个实现类覆盖了
+    private AuthenticationEntryPoint authenticationEntryPoint;
+
+    @Autowired
+    //注入Security提供的授权失败的处理器，这个处理器里面的AccessDeniedHandlerImpl实现类，用的不是官方的了，
+    //而是用的是我们在handler目录写好的AccessDeniedHandlerImpl实现类，因为我们也是添加到容器把官方的这个实现类覆盖了
+    private AccessDeniedHandler accessDeniedHandler;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -57,6 +72,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         //把token校验过滤器添加到过滤器链中
         //第一个参数是上面注入的我们在filter目录写好的类，第二个参数表示你想添加到哪个过滤器之前
         http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
+        //---------------------------异常处理的相关配置-------------------------------
+
+        http.exceptionHandling()
+                //配置认证失败的处理器
+                .authenticationEntryPoint(authenticationEntryPoint)
+                //配置授权失败的处理器
+                .accessDeniedHandler(accessDeniedHandler);
+
+        //---------------------------设置security运行跨域访问 ------------------
+        http.cors();
 
     }
 }
